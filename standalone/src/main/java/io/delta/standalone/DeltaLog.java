@@ -15,6 +15,7 @@
  */
 package io.delta.standalone;
 
+import io.delta.standalone.actions.CheckVersionInfo;
 import io.delta.standalone.actions.CommitInfo;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -71,6 +72,9 @@ public interface DeltaLog {
      * @return the {@link CommitInfo} of the commit at the provided version.
      */
     CommitInfo getCommitInfoAt(long version);
+
+    /** universe platform used */
+    CheckVersionInfo isVersionExist(long version);
 
     /** @return the path of the Delta table. */
     Path getPath();

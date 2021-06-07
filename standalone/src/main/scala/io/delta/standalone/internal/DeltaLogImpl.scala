@@ -18,11 +18,10 @@ package io.delta.standalone.internal
 
 import java.io.File
 import java.util.concurrent.locks.ReentrantLock
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import io.delta.standalone.DeltaLog
-import io.delta.standalone.actions.{CommitInfo => CommitInfoJ}
+import io.delta.standalone.actions.{CheckVersionInfo, CommitInfo => CommitInfoJ}
 import io.delta.standalone.internal.storage.HDFSReadOnlyLogStore
 import io.delta.standalone.internal.util.ConversionUtils
 
@@ -52,6 +51,9 @@ private[internal] class DeltaLogImpl private(
     history.checkVersionExists(version)
     ConversionUtils.convertCommitInfo(history.getCommitInfo(version))
   }
+
+  /** universe platform used */
+  override def isVersionExist(version: Long): CheckVersionInfo = history.isVersionExists(version)
 
   /**
    * Run `body` inside `deltaLogLock` lock using `lockInterruptibly` so that the thread can be

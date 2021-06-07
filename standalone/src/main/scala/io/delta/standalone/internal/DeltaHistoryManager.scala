@@ -16,8 +16,9 @@
 
 package io.delta.standalone.internal
 
-import java.sql.Timestamp
+import io.delta.standalone.actions.CheckVersionInfo
 
+import java.sql.Timestamp
 import org.apache.hadoop.fs.Path
 import io.delta.standalone.internal.actions.{Action, CommitInfo, CommitMarker}
 import io.delta.standalone.internal.exception.DeltaErrors
@@ -56,6 +57,20 @@ private[internal] case class DeltaHistoryManager(deltaLog: DeltaLogImpl) {
     if (version < earliestVersion || version > latestVersion) {
       throw DeltaErrors.versionNotExistException(version, earliestVersion, latestVersion)
     }
+  }
+
+  /**
+   * universe platform used
+   * @param version
+   * @return
+   */
+  def isVersionExists(version: Long): CheckVersionInfo = {
+    val earliestVersion = getEarliestReproducibleCommitVersion
+    val latestVersion = deltaLog.update().version
+    if (version < earliestVersion || version > latestVersion) {
+      return new CheckVersionInfo(earliestVersion, latestVersion, false)
+    }
+    new CheckVersionInfo(earliestVersion, latestVersion, true)
   }
 
   /**

@@ -47,17 +47,15 @@ package io.delta.standalone.internal.data
 
 import java.sql.{Date, Timestamp}
 import java.util
-import java.util.TimeZone
-
+import java.util.{Locale, TimeZone}
 import scala.collection.JavaConverters._
 import scala.collection.compat.Factory
 import scala.reflect.ClassTag
-
 import com.github.mjakubowski84.parquet4s._
-
 import io.delta.standalone.data.{RowRecord => RowParquetRecordJ}
 import io.delta.standalone.internal.exception.DeltaErrors
 import io.delta.standalone.types._
+import org.slf4j.LoggerFactory
 
 /**
  * Scala implementation of Java interface [[RowParquetRecordJ]].
@@ -75,6 +73,10 @@ private[internal] case class RowParquetRecordImpl(
    * Needed to decode values. Constructed with the `timeZone` to properly decode time-based data.
    */
   private val codecConf = ValueCodecConfiguration(timeZone)
+
+  private val LOG = LoggerFactory.getLogger(classOf[RowParquetRecordImpl])
+
+  private val nullValueStr = "null"
 
   ///////////////////////////////////////////////////////////////////////////
   // Public API Methods
@@ -117,6 +119,19 @@ private[internal] case class RowParquetRecordImpl(
 
   override def getMap[K, V](fieldName: String): util.Map[K, V] = getAs[util.Map[K, V]](fieldName)
 
+  /** universe platform used */
+  override def getBooleanAsString(fieldName: String): String = getAsString(fieldName)
+
+  override def getIntAsString(fieldName: String): String = getAsString(fieldName)
+
+  override def getFloatAsString(fieldName: String): String = getAsString(fieldName)
+
+  override def getLongAsString(fieldName: String): String = getAsString(fieldName)
+
+  override def getDoubleAsString(fieldName: String): String = getAsString(fieldName)
+
+  override def getDateAsString(fieldName: String): String = getAsString(fieldName)
+
   ///////////////////////////////////////////////////////////////////////////
   // Decoding Helper Methods
   ///////////////////////////////////////////////////////////////////////////
@@ -148,10 +163,49 @@ private[internal] case class RowParquetRecordImpl(
   }
 
   /**
+   * universe platform used
+   * @param fieldName
+   * @tparam T
+   * @return
+   */
+  private def getAsString[T](fieldName: String): String = {
+    val schemaField = schema.get(fieldName)
+    val parquetVal = record.get(fieldName)
+
+    LOG.debug("schemaField Name = " + schemaField.getName)
+    LOG.debug("schemaField DataType = " + schemaField.getDataType.getSimpleString)
+    LOG.debug("parquetVal = " + parquetVal)
+
+    if (parquetVal == NullValue && !schemaField.isNullable) {
+      throw DeltaErrors.nullValueFoundForNonNullSchemaField(fieldName, schema)
+    }
+
+    if(null == parquetVal || parquetVal == NullValue) {
+      return nullValueStr
+    }
+
+    if (primitiveDecodeMap.contains(schemaField.getDataType.getTypeName)
+      && parquetVal == NullValue) {
+      throw DeltaErrors.nullValueFoundForPrimitiveTypes(fieldName)
+    }
+
+    String.valueOf(decode(schemaField.getDataType, parquetVal))
+  }
+
+  /**
    * Decode the parquet `parqetVal` into the corresponding Scala type for `elemType`
    */
   private def decode(elemType: DataType, parquetVal: Value): Any = {
-    val elemTypeName = elemType.getTypeName
+    var elemTypeName = elemType.getTypeName
+    val parquetValTypeName = getParquetValTypeName(parquetVal)
+
+    LOG.debug("elemTypeName = " + elemTypeName)
+    LOG.debug("parquetValTypeName = " + parquetValTypeName)
+
+    // universe platform used
+    if(elemTypeName.equals("timestamp") && getParquetValTypeName(parquetVal).equals("long")) {
+      elemTypeName = "long"
+    }
     if (primitiveDecodeMap.contains(elemTypeName)) {
       return primitiveDecodeMap(elemTypeName).decode(parquetVal, codecConf)
     }
@@ -167,6 +221,20 @@ private[internal] case class RowParquetRecordImpl(
       case _ =>
         throw new RuntimeException(s"Unknown non-primitive decode type $elemTypeName, $parquetVal")
     }
+  }
+
+  private def getParquetValTypeName(parquetVal: Value): String = {
+    var tmp = parquetVal.getClass.getSimpleName
+    tmp = stripSuffix(tmp, "$")
+    tmp = stripSuffix(tmp, "Type")
+    tmp = stripSuffix(tmp, "UDT")
+    tmp = stripSuffix(tmp, "Value")
+    tmp.toLowerCase(Locale.ROOT)
+  }
+
+  private def stripSuffix(orig: String, suffix: String): String = {
+    if (null != orig && orig.endsWith(suffix)) return orig.substring(0, orig.length - suffix.length)
+    orig
   }
 
   /**

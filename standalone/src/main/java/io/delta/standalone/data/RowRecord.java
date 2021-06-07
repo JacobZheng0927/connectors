@@ -236,4 +236,13 @@ public interface RowRecord {
      *                              nullable and {@code null} data value read
      */
     <K, V> Map<K, V> getMap(String fieldName);
+
+    /** universe platform used */
+    String getBooleanAsString(String fieldName);
+    String getIntAsString(String fieldName);
+    String getFloatAsString(String fieldName);
+    String getLongAsString(String fieldName);
+    String getDoubleAsString(String fieldName);
+    String getDateAsString(String fieldName);
+
 }

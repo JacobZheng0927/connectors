@@ -258,10 +258,12 @@ lazy val standalone = (project in file("standalone"))
     libraryDependencies ++= Seq(
       "org.apache.hadoop" % "hadoop-client" % hadoopVersion % "provided",
       "org.apache.parquet" % "parquet-hadoop" % "1.10.1" % "provided",
-      "com.github.mjakubowski84" %% "parquet4s-core" % "1.2.1" excludeAll (
+      "com.github.mjakubowski84" %% "parquet4s-core" % "1.2.2-UNIVERSE" excludeAll (
         ExclusionRule("org.slf4j", "slf4j-api"),
         ExclusionRule("org.apache.parquet", "parquet-hadoop")
       ),
+      "com.chuusai" % "shapeless_2.12" % "2.3.4",
+      "org.scala-lang.modules" % "scala-collection-compat_2.12" % "2.4.2",
       "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.6.7.1",
       "org.json4s" %% "json4s-jackson" % "3.5.3" excludeAll (
         ExclusionRule("com.fasterxml.jackson.core"),

@@ -154,6 +154,10 @@ private[internal] case class RowParquetRecordImpl(
       throw DeltaErrors.nullValueFoundForNonNullSchemaField(fieldName, schema)
     }
 
+    if(null == parquetVal || parquetVal == NullValue) {
+      null
+    }
+
     if (primitiveDecodeMap.contains(schemaField.getDataType.getTypeName)
       && parquetVal == NullValue) {
       throw DeltaErrors.nullValueFoundForPrimitiveTypes(fieldName)
@@ -203,9 +207,9 @@ private[internal] case class RowParquetRecordImpl(
     LOG.debug("parquetValTypeName = " + parquetValTypeName)
 
     // universe platform used
-    if(elemTypeName.equals("timestamp") && getParquetValTypeName(parquetVal).equals("long")) {
-      elemTypeName = "long"
-    }
+//    if(elemTypeName.equals("timestamp") && getParquetValTypeName(parquetVal).equals("long")) {
+//      elemTypeName = "long"
+//    }
     if (primitiveDecodeMap.contains(elemTypeName)) {
       return primitiveDecodeMap(elemTypeName).decode(parquetVal, codecConf)
     }

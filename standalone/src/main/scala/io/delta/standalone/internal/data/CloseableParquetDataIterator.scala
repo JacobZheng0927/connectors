@@ -17,12 +17,12 @@
 package io.delta.standalone.internal.data
 
 import java.util.TimeZone
-
-import com.github.mjakubowski84.parquet4s._
+import com.github.mjakubowski84.parquet4s.{ParquetIterable, _}
 import com.github.mjakubowski84.parquet4s.ParquetReader.Options
-
 import io.delta.standalone.data.{CloseableIterator, RowRecord => RowParquetRecordJ}
 import io.delta.standalone.types.StructType
+
+import scala.annotation.tailrec
 
 /**
  * A [[CloseableIterator]] over [[RowParquetRecordJ]]s.
@@ -83,10 +83,25 @@ private[internal] case class CloseableParquetDataIterator(
     // No more rows in this file, but there is a next file
     parquetRows.close()
     parquetRows = readNextFile
-    // if parquetRows is empty, readNextFile
-    if(null != parquetRows && parquetRows.isEmpty) parquetRows = readNextFile
+    // if parquetRows is empty, recursion read next file
+    parquetRows = checkParquetRowsIsEmpty
     parquetRowsIter = parquetRows.iterator
     parquetRowsIter.hasNext
+  }
+
+  @tailrec
+  private def checkParquetRowsIsEmpty: ParquetIterable[RowParquetRecord] = {
+    if (null == parquetRows) {
+      return parquetRows
+    }
+    if (null != parquetRows) {
+      if (parquetRows.isEmpty) {
+        parquetRows = readNextFile
+      } else {
+        return parquetRows
+      }
+    }
+    checkParquetRowsIsEmpty
   }
 
   /**

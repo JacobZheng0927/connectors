@@ -83,6 +83,8 @@ private[internal] case class CloseableParquetDataIterator(
     // No more rows in this file, but there is a next file
     parquetRows.close()
     parquetRows = readNextFile
+    // if parquetRows is empty, readNextFile
+    if(null != parquetRows && parquetRows.isEmpty) parquetRows = readNextFile
     parquetRowsIter = parquetRows.iterator
     parquetRowsIter.hasNext
   }

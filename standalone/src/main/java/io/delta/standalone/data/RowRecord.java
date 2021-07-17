@@ -21,6 +21,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
+import com.github.mjakubowski84.parquet4s.Value;
 import io.delta.standalone.types.StructField;
 import io.delta.standalone.types.StructType;
 
@@ -238,11 +239,6 @@ public interface RowRecord {
     <K, V> Map<K, V> getMap(String fieldName);
 
     /** universe platform used */
-    String getBooleanAsString(String fieldName);
-    String getIntAsString(String fieldName);
-    String getFloatAsString(String fieldName);
-    String getLongAsString(String fieldName);
-    String getDoubleAsString(String fieldName);
-    String getDateAsString(String fieldName);
-
+    String getFieldValueAsString(String fieldName);
+    Value getValue(String fieldName);
 }

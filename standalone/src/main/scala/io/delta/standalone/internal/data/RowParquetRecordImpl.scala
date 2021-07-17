@@ -120,17 +120,9 @@ private[internal] case class RowParquetRecordImpl(
   override def getMap[K, V](fieldName: String): util.Map[K, V] = getAs[util.Map[K, V]](fieldName)
 
   /** universe platform used */
-  override def getBooleanAsString(fieldName: String): String = getAsString(fieldName)
+  override def getFieldValueAsString(fieldName: String): String = getAsString(fieldName)
 
-  override def getIntAsString(fieldName: String): String = getAsString(fieldName)
-
-  override def getFloatAsString(fieldName: String): String = getAsString(fieldName)
-
-  override def getLongAsString(fieldName: String): String = getAsString(fieldName)
-
-  override def getDoubleAsString(fieldName: String): String = getAsString(fieldName)
-
-  override def getDateAsString(fieldName: String): String = getAsString(fieldName)
+  override def getValue(fieldName: String): Value = getValueByFieldName(fieldName)
 
   ///////////////////////////////////////////////////////////////////////////
   // Decoding Helper Methods
@@ -190,6 +182,19 @@ private[internal] case class RowParquetRecordImpl(
     }
 
     String.valueOf(decode(schemaField.getDataType, parquetVal))
+  }
+
+  /**
+   * universe platform used
+   * @param fieldName
+   * @return
+   */
+  private def getValueByFieldName(fieldName: String): Value = {
+    val parquetVal = record.get(fieldName)
+    if(null == parquetVal || parquetVal == NullValue) {
+      return null
+    }
+    parquetVal
   }
 
   /**

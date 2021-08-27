@@ -16,9 +16,11 @@
 
 package io.delta.standalone.internal.data
 
+import java.net.URI
 import java.util.TimeZone
-import com.github.mjakubowski84.parquet4s.{ParquetIterable, _}
+
 import com.github.mjakubowski84.parquet4s.ParquetReader.Options
+import com.github.mjakubowski84.parquet4s.{ParquetIterable, _}
 import io.delta.standalone.data.{CloseableIterator, RowRecord => RowParquetRecordJ}
 import io.delta.standalone.types.StructType
 
@@ -45,6 +47,7 @@ private[internal] case class CloseableParquetDataIterator(
   /** Iterator over the `dataFilePaths`. */
   private val dataFilePathsIter = dataFilePaths.iterator
 
+  var currentFile: URI = _
   /**
    * Iterable resource that allows for iteration over the parquet rows for a single file.
    * Must be closed.
@@ -115,6 +118,9 @@ private[internal] case class CloseableParquetDataIterator(
     RowParquetRecordImpl(row, schema, readTimeZone)
   }
 
+  def getCurrentFile(): URI = {
+    currentFile
+  }
   /**
    * Closes the `parquetRows` iterable and sets fields to null, ensuring that all following calls
    * to `hasNext` return false
@@ -133,6 +139,8 @@ private[internal] case class CloseableParquetDataIterator(
    * @return the iterable for the next data file in `dataFilePathsIter`, not null
    */
   private def readNextFile: ParquetIterable[RowParquetRecord] = {
-    ParquetReader.read[RowParquetRecord](dataFilePathsIter.next(), Options(readTimeZone))
+    val path = dataFilePathsIter.next()
+    currentFile = URI.create(path)
+    ParquetReader.read[RowParquetRecord](path, Options(readTimeZone))
   }
 }

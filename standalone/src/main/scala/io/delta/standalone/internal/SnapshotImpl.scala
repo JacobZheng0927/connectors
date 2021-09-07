@@ -18,20 +18,19 @@ package io.delta.standalone.internal
 
 import java.net.URI
 
-import scala.collection.JavaConverters._
-
 import com.github.mjakubowski84.parquet4s.ParquetReader
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
-
-import io.delta.standalone.{DeltaLog, Snapshot}
+import io.delta.standalone.Snapshot
 import io.delta.standalone.actions.{AddFile => AddFileJ, Metadata => MetadataJ}
 import io.delta.standalone.data.{CloseableIterator, RowRecord => RowParquetRecordJ}
-import io.delta.standalone.internal.actions.{Action, AddFile, InMemoryLogReplay, Metadata, Protocol, SingleAction}
+import io.delta.standalone.internal.actions._
 import io.delta.standalone.internal.data.CloseableParquetDataIterator
 import io.delta.standalone.internal.exception.DeltaErrors
 import io.delta.standalone.internal.sources.StandaloneHadoopConf
 import io.delta.standalone.internal.util.{ConversionUtils, FileNames, JsonUtils}
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{FileSystem, Path}
+
+import scala.collection.JavaConverters._
 
 /**
  * Scala implementation of Java interface [[Snapshot]].
